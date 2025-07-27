@@ -1,7 +1,34 @@
 // Simple To‑Do/Notes app built with plain React (no JSX) using CDN
 
+// Wrap in an IIFE to avoid polluting the global scope
 (function () {
   const { useState } = React;
+
+  /**
+   * TodoItem component renders a single note entry with controls.
+   * Using a component makes the main App function cleaner and easier to follow.
+   */
+  function TodoItem({ item, onToggle, onEdit, onDelete }) {
+    return React.createElement(
+      'li',
+      { key: item.id },
+      React.createElement('input', {
+        type: 'checkbox',
+        checked: item.completed,
+        onChange: () => onToggle(item.id)
+      }),
+      React.createElement('span', {
+        style: { textDecoration: item.completed ? 'line-through' : 'none' }
+      }, item.text),
+      React.createElement('button', {
+        className: 'edit',
+        onClick: () => onEdit(item.id)
+      }, 'Edit'),
+      React.createElement('button', {
+        onClick: () => onDelete(item.id)
+      }, 'Delete')
+    );
+  }
 
   function App() {
     const [items, setItems] = useState([
@@ -74,44 +101,40 @@
           placeholder: editingId !== null ? 'Edit note' : 'Enter note…',
           onChange: (e) => setInputValue(e.target.value)
         }),
-        React.createElement('button', { onClick: handleAddOrUpdate }, editingId !== null ? 'Update' : 'Add')
+        React.createElement(
+          'button',
+          { onClick: handleAddOrUpdate },
+          editingId !== null ? 'Update' : 'Add'
+        )
       ),
       // Filter buttons
       React.createElement(
         'div',
         { className: 'filter' },
         ['all', 'active', 'completed'].map(value =>
-          React.createElement('button', {
-            key: value,
-            className: filter === value ? 'active' : '',
-            onClick: () => handleFilterChange(value)
-          }, value.charAt(0).toUpperCase() + value.slice(1))
+          React.createElement(
+            'button',
+            {
+              key: value,
+              className: filter === value ? 'active' : '',
+              onClick: () => handleFilterChange(value)
+            },
+            value.charAt(0).toUpperCase() + value.slice(1)
+          )
         )
       ),
-      // List of notes
+      // List of notes using TodoItem component
       React.createElement(
         'ul',
         null,
         filteredItems.map(item =>
-          React.createElement(
-            'li',
-            { key: item.id },
-            React.createElement('input', {
-              type: 'checkbox',
-              checked: item.completed,
-              onChange: () => handleToggleCompleted(item.id)
-            }),
-            React.createElement('span', {
-              style: { textDecoration: item.completed ? 'line-through' : 'none' }
-            }, item.text),
-            React.createElement('button', {
-              className: 'edit',
-              onClick: () => handleEditStart(item.id)
-            }, 'Edit'),
-            React.createElement('button', {
-              onClick: () => handleDelete(item.id)
-            }, 'Delete')
-          )
+          React.createElement(TodoItem, {
+            key: item.id,
+            item,
+            onToggle: handleToggleCompleted,
+            onEdit: handleEditStart,
+            onDelete: handleDelete
+          })
         )
       )
     );
